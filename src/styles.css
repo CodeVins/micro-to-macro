@@ -1,0 +1,217 @@
+/* 우주 무대라 테마는 어두운 한 가지로 고정한다. 강조색은 규모에 따라 보간되는 --scale-color 하나. */
+:root {
+  --void: #070a18;
+  --ink: #ece8f6;
+  --ink-dim: #a9a6c2;
+  --rule: rgba(236, 232, 246, 0.22);
+  --scale-color: #f1ece4;
+  --display: "Bricolage Grotesque Variable", "IBM Plex Sans KR", system-ui, sans-serif;
+  --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --gutter: 28px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* 레이어 순서: 장면 0 < 이름표 1 < HUD 2 < 눈금·비교 3 < 로딩 5 */
+.stage { position: fixed; inset: 0; z-index: 0; }
+.stage canvas { display: block; }
+.labels { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.spacer { width: 1px; }
+
+.brand {
+  position: fixed; z-index: 2; top: 0; left: 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 22px) var(--gutter) 0;
+  pointer-events: none;
+}
+.brand h1 { margin: 0; font-family: var(--display); font-weight: 600; font-size: 1.05rem; letter-spacing: -0.01em; }
+.brand p { margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--ink-dim); }
+
+/* ---------- 왼쪽 아래: 현재 규모 ---------- */
+.readout {
+  position: fixed; z-index: 2; left: 0; bottom: 0;
+  padding: 0 var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 30px);
+  max-width: min(36rem, 100%);
+  pointer-events: none;
+}
+.power {
+  font-family: var(--display); font-weight: 250; line-height: 0.85;
+  font-size: clamp(4.2rem, 12vw, 9.5rem); letter-spacing: -0.045em;
+  color: var(--scale-color);
+  font-variation-settings: "opsz" 96;
+  display: flex; align-items: flex-start;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.45);
+}
+.power sup {
+  font-size: 0.42em; font-weight: 400; letter-spacing: -0.02em;
+  margin-left: 0.04em; margin-top: 0.02em; min-width: 3.2ch;
+  font-variant-numeric: tabular-nums;
+}
+.power .unit { font-size: 0.3em; font-weight: 300; align-self: flex-end; margin: 0 0 0.12em 0.2em; color: var(--ink-dim); letter-spacing: 0; }
+.plain { margin: 0.55rem 0 0.9rem; font-size: 1rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.plain b { color: var(--ink); font-weight: 600; }
+
+/* 거울: 지금 크기를 사람 키로 맞추면 사람은 무엇이 되는가 */
+.mirror {
+  margin: 0 0 1.1rem; padding-left: 0.85rem;
+  border-left: 1px solid var(--scale-color);
+  font-size: 0.86rem; line-height: 1.55; color: var(--ink-dim);
+  max-width: 30em;
+  opacity: 0; transform: translateY(4px);
+  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+}
+.mirror.on { opacity: 1; transform: none; }
+.mirror b { display: block; font-family: var(--display); font-weight: 500; font-size: 1.3rem; letter-spacing: -0.01em; color: var(--scale-color); }
+
+.what h2 { margin: 0 0 0.35rem; font-size: 1.45rem; font-weight: 600; letter-spacing: -0.01em; }
+.what p { margin: 0; font-size: 0.94rem; line-height: 1.72; color: var(--ink-dim); max-width: 32em; }
+.what.in { animation: swap 0.45s var(--ease) both; }
+@keyframes swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- 위 가운데: 이웃한 두 대상의 비교 ---------- */
+.compare {
+  position: fixed; z-index: 3; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 76px);
+  transform: translateX(-50%); width: min(34rem, 88vw); text-align: center;
+  opacity: 0; pointer-events: none; text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85);
+}
+.compare .pair { font-size: 0.9rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.compare .pair b { color: var(--ink); font-weight: 600; }
+.compare .big {
+  font-family: var(--display); font-weight: 300; font-size: clamp(2.6rem, 7vw, 4.6rem);
+  line-height: 1.05; letter-spacing: -0.03em; color: var(--scale-color); margin: 0.15rem 0 0.35rem;
+}
+.compare p { margin: 0 auto; font-size: 1rem; line-height: 1.65; max-width: 28em; }
+@media (min-width: 1100px) { .compare { top: calc(env(safe-area-inset-top, 0px) + 26px); } }
+
+/* ---------- 가운데 큰 문장 ---------- */
+.intro, .beat {
+  position: fixed; z-index: 3; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px);
+  width: min(40rem, calc(100vw - 2 * var(--gutter) - 40px));
+  margin-left: calc(-1 * min(40rem, calc(100vw - 2 * var(--gutter) - 40px)) / 2);
+  text-align: center; pointer-events: none;
+  opacity: 0; visibility: hidden;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.6);
+}
+/* 문장 뒤에 부드러운 어둠을 깔아 3D 대상 위에서도 읽히게 */
+.intro::before, .beat::before {
+  content: ""; position: absolute; inset: -18% -14%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(5, 6, 14, 0.62), rgba(5, 6, 14, 0.35) 55%, rgba(5, 6, 14, 0) 100%);
+}
+.beat h2 {
+  margin: 0 0 0.9rem;
+  font-family: var(--body); font-weight: 600;
+  font-size: clamp(1.7rem, 4.2vw, 3.1rem); line-height: 1.2; letter-spacing: -0.025em;
+  color: var(--scale-color);
+  text-wrap: balance;
+}
+.beat p { margin: 0 auto; font-size: clamp(0.98rem, 1.5vw, 1.15rem); line-height: 1.75; color: var(--ink); max-width: 30em; text-wrap: pretty; }
+
+.intro-kicker { margin: 0; font-size: 0.95rem; color: var(--ink-dim); }
+.intro-size {
+  margin: 0.1rem 0 0.8rem;
+  font-family: var(--display); font-weight: 250; font-variation-settings: "opsz" 96;
+  font-size: clamp(4.5rem, 13vw, 8.5rem); line-height: 0.95; letter-spacing: -0.05em;
+  color: var(--scale-color);
+}
+.intro-body { margin: 0 auto; max-width: 26em; font-size: 1.02rem; line-height: 1.75; color: var(--ink); text-wrap: pretty; }
+
+/* ---------- 오른쪽: 규모 눈금 ---------- */
+.ruler {
+  position: fixed; z-index: 3; right: 22px;
+  top: calc(env(safe-area-inset-top, 0px) + 11vh);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 11vh);
+  width: 14px;
+}
+.ruler::before {
+  content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px;
+  background: linear-gradient(#9cc8ff, var(--ink-dim) 45%, #ffa27a);
+  opacity: 0.55;
+}
+.ruler .end { position: absolute; right: -4px; font-size: 0.72rem; color: var(--ink-dim); white-space: nowrap; }
+.ruler .end.top { top: -1.7rem; }
+.ruler .end.bottom { bottom: -1.7rem; }
+.tick {
+  position: absolute; left: 0; width: 14px; height: 14px; margin-top: -7px;
+  padding: 0; border: 0; background: none; cursor: pointer; color: var(--ink);
+}
+.tick::before {
+  content: ""; position: absolute; left: 3px; top: 6px; width: 8px; height: 2px; border-radius: 1px;
+  background: var(--ink-dim); transition: width 0.2s, left 0.2s, background 0.2s;
+}
+.tick span {
+  position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
+  font-size: 0.78rem; white-space: nowrap;
+  padding: 0.18rem 0.5rem; border-radius: 3px;
+  background: rgba(7, 10, 24, 0.72); color: var(--ink);
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.tick:hover span, .tick:focus-visible span, .tick.active span { opacity: 1; }
+.tick:hover::before, .tick.active::before { left: 0; width: 14px; background: var(--ink); }
+.tick:focus-visible { outline: 2px solid #9cc8ff; outline-offset: 2px; border-radius: 2px; }
+.tick:active::before { transform: scaleX(0.8); }
+/* 당신의 자리: 항상 보인다 */
+.tick.you::before { left: -5px; width: 24px; background: var(--ink); }
+.tick.you span { opacity: 1; color: var(--ink); font-weight: 600; }
+.now { position: absolute; left: -6px; width: 26px; height: 2px; margin-top: -1px; background: var(--scale-color); pointer-events: none; }
+
+.label {
+  position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none;
+  font-size: 0.8rem; color: var(--ink); text-align: center; white-space: nowrap; line-height: 1.35;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+.label small { display: block; font-size: 0.72rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+
+.credit {
+  position: fixed; z-index: 2; right: 14px; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); margin: 0;
+  font-size: 0.66rem; color: var(--ink-dim); opacity: 0.7;
+}
+.credit a { color: inherit; }
+.credit a:focus-visible { outline: 2px solid #9cc8ff; outline-offset: 2px; }
+
+/* ---------- 로딩 ---------- */
+.loading {
+  position: fixed; inset: 0; z-index: 5; display: grid; place-content: center; justify-items: center; gap: 1.1rem;
+  background: var(--void); color: var(--ink-dim); font-size: 0.9rem;
+  transition: opacity 0.9s var(--ease), visibility 0.9s;
+}
+.loading.done { opacity: 0; visibility: hidden; }
+.loading p { margin: 0; }
+.loading-bar { width: 180px; height: 1px; background: var(--rule); position: relative; overflow: hidden; }
+.loading-bar::after {
+  content: ""; position: absolute; inset: 0; width: 40%; background: var(--ink);
+  animation: load 1.4s var(--ease) infinite;
+}
+@keyframes load { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+
+.fail {
+  position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; padding: 2rem; text-align: center;
+  background: var(--void); color: var(--ink); line-height: 1.7;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 640px) {
+  :root { --gutter: 16px; }
+  .readout { padding-right: 52px; }
+  .what p { font-size: 0.86rem; line-height: 1.6; }
+  .mirror { font-size: 0.8rem; margin-bottom: 0.8rem; }
+  .mirror b { font-size: 1.1rem; }
+  .ruler { right: 14px; }
+  .tick span { display: none; }
+  .tick.you span { display: block; right: 18px; font-size: 0.7rem; }
+  .compare p { font-size: 0.9rem; }
+  .intro, .beat { top: calc(env(safe-area-inset-top, 0px) + 84px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .what.in { animation: none; }
+  .mirror { transition: none; }
+  .loading-bar::after { animation: none; width: 100%; }
+}

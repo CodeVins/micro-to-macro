@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+
+# 로컬 에이전트 도구 설정 (설치한 스킬 등)
+.agents/
+.claude/
+skills-lock.json
